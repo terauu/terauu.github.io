@@ -4,13 +4,54 @@
   
   
   <entry>
-    <title>Hello World</title>
-    <link href="/2023/02/26/hello-world/"/>
-    <url>/2023/02/26/hello-world/</url>
+    <title>Port-forwarding | CentOS 端口转发</title>
+    <link href="/2023/05/24/Port-forwarding-linux-%E7%AB%AF%E5%8F%A3%E8%BD%AC%E5%8F%91/"/>
+    <url>/2023/05/24/Port-forwarding-linux-%E7%AB%AF%E5%8F%A3%E8%BD%AC%E5%8F%91/</url>
     
-    <content type="html"><![CDATA[<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p><h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo new <span class="hljs-string">&quot;My New Post&quot;</span><br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/writing.html">Writing</a></p><h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo server<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/server.html">Server</a></p><h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo generate<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/generating.html">Generating</a></p><h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo deploy<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>]]></content>
+    <content type="html"><![CDATA[<h1 id="Port-Forwarding"><a href="#Port-Forwarding" class="headerlink" title="Port Forwarding"></a>Port Forwarding</h1><h2 id="CentOS"><a href="#CentOS" class="headerlink" title="CentOS"></a>CentOS</h2><p>CentOS uses <strong>firewalld</strong> to implement the function of <strong>port forwarding</strong>.</p><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-comment"># First of all, we need to enable ip_forward</span><br><span class="hljs-built_in">echo</span> net.ipv4.ip_forward=1&gt;&gt;/etc/sysctl.conf<br><br><span class="hljs-comment"># Check if the mode is enabled</span><br>sysctl -p<br><br><span class="hljs-comment"># Check the status of firewalld</span><br>systemctl status firewalld<br><br><span class="hljs-comment"># Enable firewalld if firewalld isn&#x27;t running</span><br>systemctl start firewalld<br><br><span class="hljs-comment"># $protocal: tcp, udp</span><br><span class="hljs-comment"># Listening $port_from</span><br>firewall-cmd --zone=public --add-port=<span class="hljs-variable">$port_from</span>/<span class="hljs-variable">$protocal</span> --permanent<br><br><span class="hljs-comment"># Forward $port_from to local $port_to</span><br>firewall-cmd --add-forward-port=port=<span class="hljs-variable">$port_from</span>:proto=<span class="hljs-variable">$protocal</span>:toport=<span class="hljs-variable">$port_to</span> --permanent<br><br><span class="hljs-comment"># Forward $port_from to $ip:$port_to</span><br>firewall-cmd --add-forward-port=port=<span class="hljs-variable">$port_from</span>:proto=<span class="hljs-variable">$protocal</span>:toaddr=<span class="hljs-variable">$ip</span>:toport=<span class="hljs-variable">$port_to</span> --permanent<br><br><span class="hljs-comment"># Check whether IP masquerading is allowed</span><br>firewall-cmd --query-masquerade <br><span class="hljs-comment"># Allow IP masquerading</span><br>firewall-cmd --permanent --add-masquerade <br><span class="hljs-comment"># Prohibit IP masquerading</span><br>firewall-cmd --permanent --remove-masquerade<br><br><span class="hljs-comment"># Load new configuration</span><br>firewall-cmd --reload<br></code></pre></td></tr></table></figure>]]></content>
     
     
+    <categories>
+      
+      <category>linux</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>linux</tag>
+      
+      <tag>运维</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>Install docker | 安装 docker</title>
+    <link href="/2023/05/24/Install-docker-1/"/>
+    <url>/2023/05/24/Install-docker-1/</url>
+    
+    <content type="html"><![CDATA[<h1 id="Install-Docker"><a href="#Install-Docker" class="headerlink" title="Install Docker"></a>Install Docker</h1><h2 id="Install-using-the-repository"><a href="#Install-using-the-repository" class="headerlink" title="Install using the repository"></a>Install using the repository</h2><h3 id="CentOS"><a href="#CentOS" class="headerlink" title="CentOS"></a>CentOS</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-comment"># Install the yum-utils package (which provides the yum-config-manager utility) and set up the repository.</span><br><br>sudo yum install -y yum-utils<br><br>sudo yum-config-manager \<br>    --add-repo \<br>    https://download.docker.com/linux/centos/docker-ce.repo<br><br>sudo yum install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin<br><br><span class="hljs-comment"># This command installs Docker, but it doesn’t start Docker. It also creates a docker group, however, it doesn’t add any users to the group by default.</span><br></code></pre></td></tr></table></figure><h3 id="Ubuntu"><a href="#Ubuntu" class="headerlink" title="Ubuntu"></a>Ubuntu</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-comment"># Set up the repository</span><br><br>sudo apt-get update<br><br>sudo apt-get install \<br>    ca-certificates \<br>    curl \<br>    gnupg \<br>    lsb-release<br><br><span class="hljs-comment"># Add Docker’s official GPG key</span><br><br>sudo <span class="hljs-built_in">mkdir</span> -m 0755 -p /etc/apt/keyrings<br><br>curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg<br><br><span class="hljs-built_in">echo</span> \<br>  <span class="hljs-string">&quot;deb [arch=<span class="hljs-subst">$(dpkg --print-architecture)</span> signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \</span><br><span class="hljs-string">  <span class="hljs-subst">$(lsb_release -cs)</span> stable&quot;</span> | sudo <span class="hljs-built_in">tee</span> /etc/apt/sources.list.d/docker.list &gt; /dev/null<br><br><span class="hljs-comment"># Install</span><br><br>sudo <span class="hljs-built_in">chmod</span> a+r /etc/apt/keyrings/docker.gpg<br><br>sudo apt-get update<br><br>sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin<br></code></pre></td></tr></table></figure><h2 id="Others"><a href="#Others" class="headerlink" title="Others"></a>Others</h2><p>Add user to group(docker)</p><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash">sudo gpasswd -a <span class="hljs-variable">$USER</span> docker <br>newgrp docker<br></code></pre></td></tr></table></figure>]]></content>
+    
+    
+    <categories>
+      
+      <category>linux</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>linux</tag>
+      
+      <tag>运维</tag>
+      
+    </tags>
     
   </entry>
   
